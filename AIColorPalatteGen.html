@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PALETTE GENIUS | AI Color Palette Generator</title>
+    <style>
+        :root {
+            --primary: #6C63FF;
+            --secondary: #FF6584;
+            --dark: #222;
+            --light: #f8f9fa;
+            --ad-bg: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            --shadow: 0 10px 30px -10px rgba(0,0,0,0.2);
+            --glow: 0 0 15px rgba(108, 99, 255, 0.5);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', system-ui, -apple-system, sans-serif;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        body {
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+        
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 8s ease-in-out infinite;
+        }
+        
+        .header-title {
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+            position: relative;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .header-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
+            position: relative;
+        }
+        
+        .header-ad {
+            background: rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            margin: 1.5rem auto;
+            border-radius: 12px;
+            max-width: 800px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .header-ad:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 1.5rem;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .ad-section {
+            background: var(--ad-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            align-self: start;
+            position: sticky;
+            top: 2rem;
+        }
+        
+        .ad-title {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #444;
+            font-size: 1.1rem;
+        }
+        
+        .main-content {
+            background: white;
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .main-content::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+            filter: blur(30px);
+            opacity: 0.1;
+        }
+        
+        h1 {
+            color: var(--primary);
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            position: relative;
+            display: inline-block;
+        }
+        
+        h1::after {
+            content: "";
+            position: absolute;
+            bottom: -10px;
+            left: 0;
+            width: 50px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+        
+        .palette-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        select, input {
+            padding: 0.8rem 1.2rem;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+            background: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        
+        .palette-container {
+            display: grid;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .palette {
+            display: flex;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            height: 120px;
+        }
+        
+        .color {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 1rem;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .color:hover {
+            flex: 1.2;
+        }
+        
+        .color-code {
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 0.3rem 0.6rem;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s;
+            opacity: 0;
+        }
+        
+        .color:hover .color-code {
+            opacity: 1;
+        }
+        
+        .palette-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.5rem;
+        }
+        
+        .palette-name {
+            font-weight: 600;
+            color: #555;
+        }
+        
+        .btn-group {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 2rem 0;
+        }
+        
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        button::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(255,255,255,0.1), rgba(255,255,255,0));
+        }
+        
+        button:hover {
+            background: var(--secondary);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 101, 132, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(1px);
+        }
+        
+        .how-it-works {
+            background: #f5f5f5;
+            padding: 2rem;
+            border-radius: 16px;
+            margin: 2rem 0;
+            position: relative;
+        }
+        
+        .how-it-works h3 {
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .how-it-works ul {
+            list-style: none;
+        }
+        
+        .how-it-works li {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+            font-size: 1.1rem;
+        }
+        
+        .how-it-works li::before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        footer::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path fill="rgba(255,255,255,0.03)" d="M0,0 L100,0 L100,100 Q50,80 0,100 Z"></path></svg>');
+            background-size: 100% auto;
+            background-repeat: no-repeat;
+            background-position: bottom;
+            opacity: 0.5;
+        }
+        
+        .footer-ad {
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            margin: 1.5rem auto;
+            border-radius: 12px;
+            max-width: 800px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        
+        .footer-credit {
+            margin-top: 1.5rem;
+            position: relative;
+            font-size: 1.1rem;
+        }
+        
+        footer a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+        
+        footer a:hover {
+            color: white;
+            transform: translateY(-2px);
+            text-shadow: 0 0 10px rgba(255, 101, 132, 0.5);
+        }
+        
+        .heart {
+            display: inline-block;
+            animation: pulse 1.5s infinite;
+            color: var(--secondary);
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: #555;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #555 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            .ad-section {
+                position: static;
+                order: -1;
+            }
+            
+            .header-title {
+                font-size: 2.2rem;
+            }
+            
+            .palette {
+                height: 80px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 1.8rem;
+            }
+            
+            .palette-controls {
+                flex-direction: column;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&family=Fira+Code&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="header-title">PALETTE GENIUS</div>
+        <div class="header-subtitle">AI-Powered Color Palette Generator</div>
+        <div class="header-ad">
+            <div class="ad-title">🎨 PRO TIP:</div>
+            <div>Use our Color Picker Tool to extract colors from images!</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="ad-section">
+            <div class="ad-title">🌈 Color Trends 2023</div>
+            <p>Discover the most popular color combinations this year</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">Advertisement</p>
+        </div>
+
+        <div class="main-content">
+            <h1>AI Palette Generator</h1>
+            
+            <div class="palette-controls">
+                <select id="paletteType">
+                    <option value="analogous">Analogous</option>
+                    <option value="monochromatic">Monochromatic</option>
+                    <option value="triadic">Triadic</option>
+                    <option value="complementary">Complementary</option>
+                    <option value="splitComplementary">Split-Complementary</option>
+                    <option value="tetradic">Tetradic</option>
+                    <option value="square">Square</option>
+                </select>
+                
+                <input type="color" id="baseColor" value="#6C63FF">
+                
+                <select id="paletteSize">
+                    <option value="3">3 Colors</option>
+                    <option value="4">4 Colors</option>
+                    <option value="5" selected>5 Colors</option>
+                    <option value="6">6 Colors</option>
+                </select>
+                
+                <button id="generateBtn">
+                    <span>✨</span> Generate Palette
+                </button>
+            </div>
+            
+            <div class="palette-container" id="paletteContainer">
+                <!-- Palettes will be generated here -->
+                <div class="palette">
+                    <div class="color" style="background: #6C63FF;">
+                        <span class="color-code">#6C63FF</span>
+                    </div>
+                    <div class="color" style="background: #63A6FF;">
+                        <span class="color-code">#63A6FF</span>
+                    </div>
+                    <div class="color" style="background: #63FFE9;">
+                        <span class="color-code">#63FFE9</span>
+                    </div>
+                    <div class="color" style="background: #6BFF63;">
+                        <span class="color-code">#6BFF63</span>
+                    </div>
+                    <div class="color" style="background: #FF63A1;">
+                        <span class="color-code">#FF63A1</span>
+                    </div>
+                </div>
+                
+                <div class="palette-info">
+                    <span class="palette-name">Vibrant Harmony</span>
+                    <button class="tooltip">
+                        <span>📋</span> Copy All
+                        <span class="tooltiptext">Copied to clipboard!</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="btn-group">
+                <button id="savePaletteBtn">
+                    <span>💾</span> Save Palette
+                </button>
+                <button id="randomBtn">
+                    <span>🎲</span> Randomize
+                </button>
+                <button id="exportPngBtn">
+                    <span>🖼️</span> Export as PNG
+                </button>
+            </div>
+
+            <div class="how-it-works">
+                <h3><span>✨</span> How It Works</h3>
+                <ul>
+                    <li>Choose a palette type from the dropdown (analogous, monochromatic, etc.)</li>
+                    <li>Select a base color or let the AI choose one for you</li>
+                    <li>Generate perfect color combinations with one click</li>
+                    <li>Copy, save, or export your favorite palettes</li>
+                    <li>Our AI ensures color harmony and accessibility</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="ad-section">
+            <div class="ad-title">🎨 Design Resources</div>
+            <p>Get 500+ professionally designed color palettes</p>
+            <p style="margin-top: 1rem; font-size: 0.9rem;">Advertisement</p>
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-ad">
+            <div class="ad-title">🚀 Upgrade to PRO</div>
+            <div>Unlock unlimited palettes, advanced export options, and more!</div>
+        </div>
+        <div class="footer-credit">
+            Designed with <span class="heart">❤️</span> by: <a href="https://instagram.com/the.ispawoo/" target="_blank">Yasir Ispawoo</a>
+        </div>
+    </footer>
+
+    <script>
+        // Color Harmony Algorithms
+        const paletteGenerators = {
+            analogous: (baseColor, count = 5) => {
+                const colors = [baseColor];
+                const step = 30; // Degrees in color wheel
+                
+                for (let i = 1; i < count; i++) {
+                    const angle = i <= Math.floor(count/2) ? -step*i : step*(i-Math.floor(count/2));
+                    colors.push(adjustHue(baseColor, angle));
+                }
+                
+                return colors;
+            },
+            
+            monochromatic: (baseColor, count = 5) => {
+                const colors = [baseColor];
+                const step = 15; // Lightness variation
+                
+                for (let i = 1; i < count; i++) {
+                    colors.push(adjustLightness(baseColor, i <= Math.floor(count/2) ? -step*i : step*(i-Math.floor(count/2))));
+                }
+                
+                return colors;
+            },
+            
+            triadic: (baseColor) => {
+                return [baseColor, adjustHue(baseColor, 120), adjustHue(baseColor, 240)];
+            },
+            
+            complementary: (baseColor) => {
+                return [baseColor, adjustHue(baseColor, 180)];
+            },
+            
+            splitComplementary: (baseColor) => {
+                return [baseColor, adjustHue(baseColor, 150), adjustHue(baseColor, 210)];
+            },
+            
+            tetradic: (baseColor) => {
+                return [baseColor, adjustHue(baseColor, 90), adjustHue(baseColor, 180), adjustHue(baseColor, 270)];
+            },
+            
+            square: (baseColor) => {
+                return [baseColor, adjustHue(baseColor, 90), adjustHue(baseColor, 180), adjustHue(baseColor, 270)];
+            }
+        };
+
+        // DOM Elements
+        const paletteType = document.getElementById('paletteType');
+        const baseColor = document.getElementById('baseColor');
+        const paletteSize = document.getElementById('paletteSize');
+        const generateBtn = document.getElementById('generateBtn');
+        const randomBtn = document.getElementById('randomBtn');
+        const savePaletteBtn = document.getElementById('savePaletteBtn');
+        const exportPngBtn = document.getElementById('exportPngBtn');
+        const paletteContainer = document.getElementById('paletteContainer');
+
+        // Generate initial palette
+        generatePalette();
+
+        // Event Listeners
+        generateBtn.addEventListener('click', generatePalette);
+        randomBtn.addEventListener('click', randomizePalette);
+        baseColor.addEventListener('input', generatePalette);
+        paletteType.addEventListener('change', generatePalette);
+        paletteSize.addEventListener('change', generatePalette);
+
+        // Generate palette based on current settings
+        function generatePalette() {
+            const type = paletteType.value;
+            const color = baseColor.value;
+            const size = parseInt(paletteSize.value);
+            
+            let colors;
+            
+            if (type === 'analogous' || type === 'monochromatic') {
+                colors = paletteGenerators[type](color, size);
+            } else {
+                colors = paletteGenerators[type](color);
+                // If user wants more colors than the scheme provides, add shades/tints
+                while (colors.length < size) {
+                    colors.push(adjustLightness(colors[colors.length % colors.length], 10 * Math.floor(colors.length / colors.length)));
+                }
+                // Trim if needed
+                colors = colors.slice(0, size);
+            }
+            
+            displayPalette(colors, `${type.charAt(0).toUpperCase() + type.slice(1)} Harmony`);
+        }
+
+        // Display the generated palette
+        function displayPalette(colors, name) {
+            paletteContainer.innerHTML = `
+                <div class="palette">
+                    ${colors.map(color => `
+                        <div class="color" style="background: ${color};">
+                            <span class="color-code">${color}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="palette-info">
+                    <span class="palette-name">${name}</span>
+                    <button class="tooltip" id="copyPaletteBtn">
+                        <span>📋</span> Copy All
+                        <span class="tooltiptext">Copied to clipboard!</span>
+                    </button>
+                </div>
+            `;
+            
+            // Add click event to copy button
+            document.getElementById('copyPaletteBtn').addEventListener('click', () => {
+                navigator.clipboard.writeText(colors.join('\n'))
+                    .then(() => {
+                        const tooltip = document.querySelector('#copyPaletteBtn .tooltiptext');
+                        tooltip.style.visibility = 'visible';
+                        tooltip.style.opacity = '1';
+                        setTimeout(() => {
+                            tooltip.style.visibility = 'hidden';
+                            tooltip.style.opacity = '0';
+                        }, 2000);
+                    });
+            });
+            
+            // Add click events to color boxes to copy individual colors
+            document.querySelectorAll('.color').forEach((colorEl, index) => {
+                colorEl.addEventListener('click', () => {
+                    navigator.clipboard.writeText(colors[index])
+                        .then(() => {
+                            const originalText = colorEl.querySelector('.color-code').textContent;
+                            colorEl.querySelector('.color-code').textContent = 'Copied!';
+                            setTimeout(() => {
+                                colorEl.querySelector('.color-code').textContent = originalText;
+                            }, 1000);
+                        });
+                });
+            });
+        }
+
+        // Generate random palette
+        function randomizePalette() {
+            // Set random base color
+            baseColor.value = getRandomColor();
+            
+            // Set random palette type
+            const types = Object.keys(paletteGenerators);
+            paletteType.value = types[Math.floor(Math.random() * types.length)];
+            
+            // Set random size (3-6)
+            paletteSize.value = Math.floor(Math.random() * 4) + 3;
+            
+            generatePalette();
+        }
+
+        // Color manipulation functions
+        function adjustHue(hex, degrees) {
+            const [h, s, l] = hexToHsl(hex);
+            const newH = (h + degrees + 360) % 360;
+            return hslToHex(newH, s, l);
+        }
+
+        function adjustLightness(hex, percent) {
+            const [h, s, l] = hexToHsl(hex);
+            const newL = Math.max(0, Math.min(100, l + percent));
+            return hslToHex(h, s, newL);
+        }
+
+        function hexToHsl(hex) {
+            let r = parseInt(hex.substr(1, 2), 16) / 255;
+            let g = parseInt(hex.substr(3, 2), 16) / 255;
+            let b = parseInt(hex.substr(5, 2), 16) / 255;
+
+            let max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0; // achromatic
+            } else {
+                let d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+
+            return [h * 360, s * 100, l * 100];
+        }
+
+        function hslToHex(h, s, l) {
+            h /= 360;
+            s /= 100;
+            l /= 100;
+            
+            let r, g, b;
+            
+            if (s === 0) {
+                r = g = b = l; // achromatic
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            
+            const toHex = x => {
+                const hex = Math.round(x * 255).toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            };
+            
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
+        // Save palette (simplified - would use localStorage or backend in real app)
+        savePaletteBtn.addEventListener('click', () => {
+            alert('Palette saved to your collection! (In a real app, this would save to your account)');
+        });
+
+        // Export as PNG (simplified - would use canvas in real app)
+        exportPngBtn.addEventListener('click', () => {
+            alert('Exporting as PNG... (In a real app, this would generate a PNG download)');
+        });
+    </script>
+</body>
+</html>
